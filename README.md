@@ -26,11 +26,13 @@ ex) git checkout -b mixed
 ```
 
 ### 4. 개발 시작
+```
+git pull upstream 본인_아이디 
+```
 [TODO](https://github.com/NHNNEXT/2015-02-HTML5/blob/master/TODO.md)
 
 ### 5. 커밋
 ```
-git pull upstream 본인_아이디 
 git status //확인
 git rm 파일명 //삭제된 파일
 git add 파일명(or * 모두) // 추가/변경 파일
