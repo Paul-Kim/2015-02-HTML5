@@ -1,5 +1,8 @@
 ## 프로젝트 진행 방법
 
+### 0. Paul-Kim의 브랜치 입니다.
+냥냥냥
+
 ### 1. fork하기
 (https://github.com/NHNNEXT/2015-02-HTML5/)
 
@@ -44,7 +47,7 @@ ex) git push origin mixed
 
 ### 6. 교수한데 pull request
 ```
-git push upstream 본인_아이디 
+git push upstream 본인_아이디
 ex) git push upstream 본인_아이디
 
 ```
