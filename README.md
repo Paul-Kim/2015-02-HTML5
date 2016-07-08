@@ -28,6 +28,7 @@ ex) git checkout -b mixed
 ### 4. 개발 시작
 ```
 git pull upstream 본인_아이디 
+git rebase upstream/본인_아이디
 ```
 [TODO](https://github.com/NHNNEXT/2015-02-HTML5/blob/master/TODO.md)
 
