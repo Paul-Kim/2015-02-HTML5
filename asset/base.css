@@ -581,3 +581,13 @@ hr {
 		margin: 130px auto 40px auto;
 	}
 }
+
+
+#test_div{
+	position: fixed;
+	top : 100px;
+	left :100px;
+	background-color: red;
+	width:100px;
+	height:100px;
+}
