@@ -1,3 +1,55 @@
+//ajax 통신
+//ajax
+//  - 전체 가져올때
+//  - 추가할 때
+//  - 완료할 때
+//  - 삭제할 때
+
+var TodoAjax = {
+  name : "paul",
+  url : "http://128.199.76.9:8002/",
+  add : function (todoString, callback){
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", this.url + this.name, true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.addEventListener("load", function (e){
+      callback(JSON.parse(xhr.responseText).insertId);
+    });
+    xhr.send("todo="+todoString);
+  },
+
+  get: function (callback){
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", this.url + this.name, true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.addEventListener("load", function (e){
+      callback(JSON.parse(xhr.responseText));
+    });
+    xhr.send();
+  },
+
+  complete: function (li, completed, callback){
+    var id = li.dataset.id;
+    var xhr = new XMLHttpRequest();
+    xhr.open("PUT", this.url + this.name + "/" + id, true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.addEventListener("load", function (e){
+      callback(JSON.parse(xhr.responseText));
+    });
+    xhr.send("completed="+completed);
+  },
+
+  remove: function (id, callback){
+    var xhr = new XMLHttpRequest();
+    xhr.open("DELETE", this.url + this.name + "/" + id, true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.addEventListener("load", function (e){
+      callback();
+    });
+    xhr.send();
+  }
+}
+
 var TODO = {
   ENTER_KEY_CODE : 13,
 
@@ -5,18 +57,34 @@ var TODO = {
     document.addEventListener("DOMContentLoaded", (function(){
       document.addEventListener("keydown", this.add.bind(this));
       document.addEventListener("click", this.click.bind(this));
+      this.loadAllTodo();
     }).bind(this));
+  },
+
+  loadAllTodo : function(){
+    TodoAjax.get(function (json){
+      for( key in json){
+        var todo = json[key];
+        this.makeAndSlidedown(todo.todo, todo.id, todo.completed);
+      }
+    }.bind(this));
   },
 
   add : function (e){
     if(e.keyCode != this.ENTER_KEY_CODE){ return; }
 
     var todoString = document.getElementById("new-todo").value;
-
     if( todoString.trim() == ""){
       return;
     }
-    var li = this.make(todoString);
+
+    TodoAjax.add(todoString, function(insertId){
+      this.makeAndSlidedown(todoString, insertId);
+    }.bind(this));
+  },
+
+  makeAndSlidedown : function (todoStr, id, completed = 0){
+    var li = this.make(todoStr, id, completed);
     li.style.height = "0px";
     var todoList = document.getElementById("todo-list");
     todoList.appendChild(li);
@@ -25,7 +93,7 @@ var TODO = {
     document.getElementById("new-todo").value = "";
   },
 
-  make : function(todoStr){
+  make : function(todoStr, id, completed = 0){
     // //일반 TODO
     // <li class="{}">
     //   <div class="view">
@@ -38,6 +106,9 @@ var TODO = {
     var input = document.createElement("input");
     input.className = "toggle";
     input.setAttribute("type", "checkbox");
+    if(completed == 1){
+      input.checked = true;
+    }
 
     var label = document.createElement("label");
     label.innerHTML = todoStr;
@@ -52,8 +123,19 @@ var TODO = {
     div_view.appendChild(button);
 
     var li = document.createElement("li");
+    li.dataset.id = id;
     li.appendChild(div_view);
+    if(completed == 1){
+      li.classList.add("completed");
+    };
     return li;
+  },
+
+  complete : function (li){
+    var completed = (li.getElementsByTagName("INPUT")[0].checketd ? 0 : 1);
+    TodoAjax.complete(li, completed, function (json){
+      li.classList.toggle("completed");
+    }.bind(li));
   },
 
   click : function(e){
@@ -70,17 +152,24 @@ var TODO = {
     // if checkbox click toggle completed
     if(target.tagName ==="INPUT" && target.type == "checkbox"){
       var li = findParentTodoLI(target);
-      li.classList.toggle("completed");
+      this.complete(li);
     };
 
     //if del button click del object
     if(target.tagName === "BUTTON" && target.classList.contains("destroy") ){
       var li = findParentTodoLI(target);
-      this.fadeout(li, 1000, function(element){
-        element.parentNode.removeChild(element);
-      });
+      this.removeAndFadeout(li);
     };
 
+  },
+
+  removeAndFadeout(element){
+    var id = element.dataset.id;
+    TodoAjax.remove(id, function (){
+      this.fadeout(element, 1000, function(element){
+        element.parentNode.removeChild(element);
+      }.bind(element));
+    }.bind(this));
   },
 
   fadeout : function(element, duration, callback){
