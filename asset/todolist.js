@@ -1,52 +1,53 @@
 
-//ajax
-//  - 전체 가져올때
-//  - 추가할 때
-//  - 완료할 때
-//  - 삭제할 때
-
 var TodoAjax = {
   name : "paul",
   url : "http://128.199.76.9:8002/",
   add : function (todoString, callback){
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", this.url + this.name, true);
-    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhr.addEventListener("load", function (e){
-      callback(JSON.parse(xhr.responseText).insertId);
-    });
-    xhr.send("todo="+todoString);
+    TodoAjax.request(
+      "POST",
+      TodoAjax.url + TodoAjax.name ,
+      "todo="+todoString,
+      callback
+    );
   },
 
   get: function (callback){
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", this.url + this.name, true);
-    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhr.addEventListener("load", function (e){
-      callback(JSON.parse(xhr.responseText));
-    });
-    xhr.send();
+    TodoAjax.request(
+      "GET",
+      TodoAjax.url + TodoAjax.name,
+      "",
+      callback
+    );
   },
 
   complete: function (li, completed, callback){
     var id = li.dataset.id;
     var xhr = new XMLHttpRequest();
-    xhr.open("PUT", this.url + this.name + "/" + id, true);
+    TodoAjax.request(
+      "PUT",
+      TodoAjax.url + TodoAjax.name + "/" + id,
+      "completed="+completed,
+      callback
+    );
+  },
+
+  remove: function (id, callback){
+    TodoAjax.request(
+      "DELETE",
+      TodoAjax.url + TodoAjax.name + "/" + id,
+      "",
+      callback
+    );
+  },
+
+  request : function ( method , target, data, callback ){
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, target, true);
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhr.addEventListener("load", function (e){
       callback(JSON.parse(xhr.responseText));
     });
-    xhr.send("completed="+completed);
-  },
-
-  remove: function (id, callback){
-    var xhr = new XMLHttpRequest();
-    xhr.open("DELETE", this.url + this.name + "/" + id, true);
-    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhr.addEventListener("load", function (e){
-      callback();
-    });
-    xhr.send();
+    xhr.send(data);
   }
 }
 
@@ -63,8 +64,10 @@ var TODO = {
 
   loadAllTodo : function(){
     TodoAjax.get(function (json){
-      for( key in json){
+      for(var key in json){
         var todo = json[key];
+        var completed = (todo.completed == 1? true: false);
+        console.log(todo.completed);
         this.makeAndSlidedown(todo.todo, todo.id, todo.completed);
       }
     }.bind(this));
@@ -78,12 +81,12 @@ var TODO = {
       return;
     }
 
-    TodoAjax.add(todoString, function(insertId){
-      this.makeAndSlidedown(todoString, insertId);
+    TodoAjax.add(todoString, function(json){
+      this.makeAndSlidedown(todoString, json.insertId, false);
     }.bind(this));
   },
 
-  makeAndSlidedown : function (todoStr, id, completed = 0){
+  makeAndSlidedown : function (todoStr, id, completed){
     var li = this.make(todoStr, id, completed);
     li.style.height = "0px";
     var todoList = document.getElementById("todo-list");
@@ -93,7 +96,7 @@ var TODO = {
     document.getElementById("new-todo").value = "";
   },
 
-  make : function(todoStr, id, completed = 0){
+  make : function(todoStr, id, completed){
     // //일반 TODO
     // <li class="{}">
     //   <div class="view">
@@ -102,37 +105,23 @@ var TODO = {
     //     <button class="destroy"></button>
     //   </div>
     // </li>
-
-    var input = document.createElement("input");
-    input.className = "toggle";
-    input.setAttribute("type", "checkbox");
-    if(completed == 1){
-      input.checked = true;
-    }
-
-    var label = document.createElement("label");
-    label.innerHTML = todoStr;
-
-    var button = document.createElement("button");
-    button.className = "destroy";
-
-    var div_view = document.createElement("div");
-    div_view.className = "view";
-    div_view.appendChild(input);
-    div_view.appendChild(label);
-    div_view.appendChild(button);
-
     var li = document.createElement("li");
     li.dataset.id = id;
-    li.appendChild(div_view);
-    if(completed == 1){
-      li.classList.add("completed");
-    };
+    if(completed) li.classList.add("completed");
+
+    var htmlString =
+      "<div class='view'>"+
+      "<input class='toggle' type='checkbox'"+(completed? " checked ":"") +">"+
+      "<label>"+todoStr+"</label>"+
+      "<button class='destroy'></button>"+
+      "</div>";
+    li.insertAdjacentHTML('afterbegin', htmlString);
+
     return li;
   },
 
   complete : function (li){
-    var completed = (li.getElementsByTagName("INPUT")[0].checketd ? 0 : 1);
+    var completed = (li.getElementsByTagName("INPUT")[0].checked ? 1 : 0);
     TodoAjax.complete(li, completed, function (json){
       li.classList.toggle("completed");
     }.bind(li));
