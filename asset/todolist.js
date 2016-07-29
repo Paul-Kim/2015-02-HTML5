@@ -1,20 +1,42 @@
+//#todo-list 엘리먼트에 active 엘리먼트를 누르면
+//1. todo-list에 all-active 클래스를 추가하고
+//2. 기존 anchor에 selected 클래스를 삭제하고
+//3. 클릭한 anchor에 selected 클래스를 추가한다.
 
-var TodoAjax = {
+var Offline = {
+  add : function (todoString, callback){
+    // offline시에 localdb에 저장.
+    alert("오프라인 상태입니다. 로컬에 저장합니다.")
+  },
+  get : function (callback){
+    alert("오프라인 상태라, 불러올 수 없습니다.\n인터넷 연결이 필요합니다.")
+  },
+
+  complete: function (li, completed, callback){
+    alert("오프라인 상태입니다.");
+  },
+  remove: function (id, callback){
+    alert("오프라인 상태입니다.");
+  },
+};
+
+var Online = {
   name : "paul",
   url : "http://128.199.76.9:8002/",
-  add : function (todoString, callback){
-    TodoAjax.request(
+
+  add : function (todoString , callback){
+    Online.request(
       "POST",
-      TodoAjax.url + TodoAjax.name ,
+      Online.url + Online.name ,
       "todo="+todoString,
       callback
     );
   },
 
-  get: function (callback){
-    TodoAjax.request(
+  get : function (callback){
+    Online.request(
       "GET",
-      TodoAjax.url + TodoAjax.name,
+      Online.url + Online.name,
       "",
       callback
     );
@@ -23,18 +45,18 @@ var TodoAjax = {
   complete: function (li, completed, callback){
     var id = li.dataset.id;
     var xhr = new XMLHttpRequest();
-    TodoAjax.request(
+    Online.request(
       "PUT",
-      TodoAjax.url + TodoAjax.name + "/" + id,
+      Online.url + Online.name + "/" + id,
       "completed="+completed,
       callback
     );
   },
 
   remove: function (id, callback){
-    TodoAjax.request(
+    Online.request(
       "DELETE",
-      TodoAjax.url + TodoAjax.name + "/" + id,
+      Online.url + Online.name + "/" + id,
       "",
       callback
     );
@@ -48,6 +70,79 @@ var TodoAjax = {
       callback(JSON.parse(xhr.responseText));
     });
     xhr.send(data);
+  }
+};
+
+var TodoAjax = {
+  status : "Online",
+
+  init: function(){
+    if(navigator.onLine){
+      TodoAjax.status = "Online";
+    }else{
+      TodoAjax.status = "Offline";
+    }
+    window.addEventListener("online", TodoAjax.onoffEvent);
+    window.addEventListener("offline", TodoAjax.onoffEvent);
+  },
+
+  onoffEvent : function (){
+    document.getElementById("header").classList[navigator.onLine?"remove":"add"]("offline");
+
+    if(navigator.onLine){
+      TodoAjax.status = "Online";
+      console.log("Syncing....");
+      // server와 sync 맞추기.
+    }else{
+      TodoAjax.status = "Offline";
+    }
+  },
+
+  add : function (todoString, callback){
+    window[TodoAjax.status].add(todoString, callback);
+  },
+
+  get: function(callback){
+    window[TodoAjax.status].get(callback);
+  },
+
+  complete: function (li, completed, callback){
+    window[TodoAjax.status].complete(li, completed, callback);
+  },
+
+  remove: function (id, callback){
+    window[TodoAjax.status].remove(id, callback);
+  },
+
+}
+
+var filter = {
+  clicked :function (target){
+    filter.changeSelected();
+    filter[target.getAttribute("href")]();
+    target.classList.add("selected");
+  },
+
+  changeSelected: function(){
+    var list = document.getElementById("filters");
+    for( key in list.childNodes){
+      var child  = list.childNodes[key];
+      if(child.tagName === "LI"){
+        var a = child.querySelector("A").className = "";
+      }
+    }
+  },
+
+  'index.html' : function (){
+    document.getElementById("todo-list").className= "";
+  },
+
+  completed : function(){
+    document.getElementById("todo-list").className= "all-completed";
+  },
+
+  active : function (){
+    document.getElementById("todo-list").className= "all-active";
   }
 }
 
@@ -67,7 +162,7 @@ var TODO = {
       for(var key in json){
         var todo = json[key];
         var completed = (todo.completed == 1? true: false);
-        console.log(todo.completed);
+        //console.log(todo.completed);
         this.makeAndSlidedown(todo.todo, todo.id, todo.completed);
       }
     }.bind(this));
@@ -150,6 +245,11 @@ var TODO = {
       this.removeAndFadeout(li);
     };
 
+    // if filter clicked,
+    if(target.tagName === "A" ){
+      e.preventDefault();
+      filter.clicked(e.target);
+    }
   },
 
   removeAndFadeout(element){
@@ -157,7 +257,7 @@ var TODO = {
     TodoAjax.remove(id, function (){
       this.fadeout(element, 1000, function(element){
         element.parentNode.removeChild(element);
-      }.bind(element));
+      });
     }.bind(this));
   },
 
@@ -217,3 +317,4 @@ var moveSquare = function(e){ //sample test code for animation
 
 document.addEventListener("click", moveSquare);
 TODO.init();
+TodoAjax.init();
