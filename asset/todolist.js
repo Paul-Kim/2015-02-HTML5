@@ -135,15 +135,22 @@ var filter = {
 
   'index.html' : function (){
     document.getElementById("todo-list").className= "";
+    history.pushState({"method" : "all"}, null, "index.html");
   },
 
   completed : function(){
     document.getElementById("todo-list").className= "all-completed";
+    history.pushState({"method" : "complete"}, null, "#/complete");
   },
 
   active : function (){
     document.getElementById("todo-list").className= "all-active";
-  }
+    history.pushState({"method" : "active"}, null, "#/active");
+  },
+
+  popstate : function (){
+    alert("popstate");
+  },
 }
 
 var TODO = {
@@ -153,6 +160,7 @@ var TODO = {
     document.addEventListener("DOMContentLoaded", (function(){
       document.addEventListener("keydown", this.add.bind(this));
       document.addEventListener("click", this.click.bind(this));
+      document.addEventListener("popstate", filter.popstate);
       this.loadAllTodo();
     }).bind(this));
   },
@@ -236,7 +244,7 @@ var TODO = {
     // if checkbox click toggle completed
     if(target.tagName ==="INPUT" && target.type == "checkbox"){
       var li = findParentTodoLI(target);
-      this.complete(li);
+      if(!!li) this.complete(li);        
     };
 
     //if del button click del object

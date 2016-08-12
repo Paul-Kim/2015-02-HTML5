@@ -590,3 +590,12 @@ hr {
 	width:100px;
 	height:100px;
 }
+
+#test_div2{
+	position: fixed;
+	top : 250px;
+	left :100px;
+	background-color: blue;
+	width:100px;
+	height:100px;
+}

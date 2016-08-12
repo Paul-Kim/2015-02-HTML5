@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title> indexed DB test </title>
+  <style>
+  body{
+    background-color: #997777;
+  }
+  </style>
+  <script>
+
+  </script>
+</head>
+<body>
+  <h1>parent</h1>
+  <script type="text/javascript">
+  var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
+  var req = indexedDB.open("nextHTML5", 3);
+  var db;
+  var store;
+
+  req.onupgradeneeded = function (e) {
+       db = e.target.result;
+       var store;
+       if(!db.objectStoreNames.contains("test")) {
+           store = db.createObjectStore("test",{
+                       keyPath: "idx",
+                       autoIncrement : true
+                   });
+       }
+   };
+
+  req.onsuccess = function (e){
+    db = e.target.result;
+  }
+
+  function add(){
+    var trans = db.transaction(["test"], "readwrite");
+    store = trans.objectStore("test");
+    var reqPut = store.put({
+      "foo2" : "asdf",
+      "bar2" : "asdfasdfbar"
+    });
+
+  }
+
+  function show(){
+    store = db.transaction(["test"], "readonly").objectStore("test");
+    store.openCursor().onsuccess = function(event) {
+      var cursor = event.target.result;
+      console.log(cursor);
+      // if (cursor) {
+      //   alert("Name for SSN " + cursor.key + " is " + cursor.value.name);
+      //   cursor.continue();
+      // }
+      // else {
+      //   alert("No more entries!");
+      // }
+    };
+  }
+
+  </script>
+  <button onclick="add()">add</button>
+  <button onClick="show()">show</button>
+</body>
+</html>
