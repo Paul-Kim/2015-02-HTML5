@@ -244,7 +244,7 @@ var TODO = {
     // if checkbox click toggle completed
     if(target.tagName ==="INPUT" && target.type == "checkbox"){
       var li = findParentTodoLI(target);
-      if(!!li) this.complete(li);        
+      if(!!li) this.complete(li);
     };
 
     //if del button click del object
