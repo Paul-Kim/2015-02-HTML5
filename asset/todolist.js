@@ -80,7 +80,8 @@ var TodoAjax = {
     if(navigator.onLine){
       TodoAjax.status = "Online";
     }else{
-      TodoAjax.status = "Offline";
+      //TodoAjax.status = "Offline";
+      TodoAjax.status = "Online";
     }
     window.addEventListener("online", TodoAjax.onoffEvent);
     window.addEventListener("offline", TodoAjax.onoffEvent);
@@ -323,6 +324,7 @@ var moveSquare = function(e){ //sample test code for animation
   })
 }
 
-document.addEventListener("click", moveSquare);
 TODO.init();
 TodoAjax.init();
+document.addEventListener("click", moveSquare);
+navigator.serviceWorker.register('asset/sw.js');
